@@ -1,0 +1,537 @@
+#include <reg51.h>
+
+#include <stdio.h>
+
+#include <intrins.h>
+
+#include <math.h>
+
+#define sound_velocity 34300
+
+#define period_in_us pow(10,-6)
+
+#define Clock_period 1.085*period_in_us
+
+#define PWM_Period 0xB7FE
+
+sbit clk1 = P3^0;
+
+sbit anticlk1= P3^1;
+
+sbit control1 = P2^0;
+
+sbit clk2 = P3^2;
+
+sbit anticlk2= P3^3;
+
+sbit control2 = P2^1;
+
+sbit clk3 = P3^4;
+
+sbit anticlk3= P3^5;
+
+sbit control3 = P2^2;
+
+sbit clk4 = P1^0;
+
+sbit anticlk4= P1^1;
+
+sbit control4= P2^3;
+
+sbit output=P2^4;
+
+sbit Trigger_pin=P2^5;
+
+sbit Echo_pin=P2^6;
+
+int distanceStraight=14;
+
+int distanceR=30;
+
+int distanceL=80;
+
+int goesForward=0;
+
+void turnRight(void);
+
+void turnLeft(void);
+
+void moveForward(void);
+
+void moveBackward(void);
+
+void moveStop(void);
+
+void delay(unsigned int);
+
+void msdelay(unsigned int);
+
+void servo_delay(int);
+
+void delay_ms2(unsigned int ms);
+
+void rotateToPositive90(void);
+
+void rotateToNegative90(void);
+
+unsigned int ON_Period, OFF_Period, DutyCycle;
+
+void delayreal(unsigned int);
+
+void Timer_init(void);
+
+void Set_DutyCycle_To(float);
+
+void Delay_us(void);
+
+void init_timer(void);
+
+void send_trigger_pulse(void);
+
+void ultraSonic_init(void);
+
+void servoMotor_init(void);
+
+void Timer_init()
+
+{
+
+TMOD = 0x01;
+
+TH0 = (PWM_Period >> 8);
+
+TL0 = PWM_Period;
+
+TR0 = 1; }
+
+void delay(unsigned int count) {
+
+unsigned int i,j;
+
+for ( i = 0; i < count; i++) {
+
+for ( j = 0; j < 922; j++);
+
+}
+
+}
+
+void main(void) {
+
+clk1=0;
+
+anticlk1=0;
+
+control1=1;
+clk2=0;
+
+anticlk2=0;
+
+control2=1;
+
+clk3=0;
+
+anticlk3=0;
+
+control3=1;
+
+clk4=0;
+
+anticlk4=0;
+
+control4=1;
+
+distanceStraight=30;
+
+distanceR=30;
+
+distanceL=80;
+
+if(distanceStraight<=15)
+
+{
+
+moveStop();
+
+delayreal(100);
+
+moveBackward();
+
+delayreal(300);
+
+moveStop();
+
+delayreal(200);
+
+servoMotor_init();
+
+if(distanceR>=distanceL)
+
+{
+
+turnRight();
+
+moveStop();
+
+}
+
+else
+
+{
+
+turnLeft();
+
+moveStop();
+
+}
+
+}
+
+else
+
+{
+
+moveForward();
+
+}
+
+}
+
+void moveForward()
+
+{
+
+if(!goesForward)
+
+goesForward=1;
+
+clk1=1;
+
+anticlk1=0;
+
+clk2=1;
+
+anticlk2=0;
+
+clk3=1;
+
+anticlk3=0;
+
+clk4=1;
+
+anticlk4=0;
+
+}
+
+void moveBackward()
+
+{
+
+goesForward=0;
+
+clk1=0;
+
+anticlk1=1;
+
+clk2=0;
+
+anticlk2=1;
+
+clk3=0;
+
+anticlk3=1;
+
+clk4=0;
+
+anticlk4=1;
+}
+
+void turnRight()
+
+{
+
+clk1=1;
+
+anticlk1=0;
+
+clk2=1;
+
+anticlk2=0;
+
+clk3=0;
+
+anticlk3=1;
+
+clk4=0;
+
+anticlk4=1;
+
+delay(100);
+
+clk1=1;
+
+anticlk1=0;
+
+clk2=1;
+
+anticlk2=0;
+
+clk3=1;
+
+anticlk3=0;
+
+clk4=1;
+
+anticlk4=0;
+
+}
+
+void turnLeft()
+
+{
+
+clk1=0;
+
+anticlk1=1;
+
+clk2=0;
+
+anticlk2=1;
+
+clk3=1;
+
+anticlk3=0;
+
+clk4=1;
+
+anticlk4=0;
+
+delay(100);
+
+clk1=1;
+
+anticlk1=0;
+
+clk2=1;
+
+anticlk2=0;
+
+clk3=1;
+
+anticlk3=0;
+
+clk4=1;
+
+anticlk4=0;
+
+}
+
+void moveStop()
+
+{
+
+clk1=0;
+
+anticlk1=0;
+
+clk2=0;
+
+anticlk2=0;
+
+clk3=0;
+
+anticlk3=0;
+
+clk4=0;
+
+anticlk4=0;
+
+}
+
+void msdelay(unsigned int time)
+
+{
+
+unsigned i,j ;
+
+for(i=0;i<time;i++)
+
+for(j=0;j<1275;j++);}
+
+void servo_delay(int times)
+
+{
+
+int m;
+for(m=0;m<times;m++)
+
+{
+
+TH0=0xFF;
+
+TL0=0xD2;
+
+TR0=1;
+
+while(TF0==0);
+
+TF0=0;
+
+TR0=0;
+
+}}
+
+void delayreal(unsigned int count)
+
+{
+
+int i,j;
+
+for(i=0; i<count; i++)
+
+for(j=0; j<112; j++);
+
+}
+
+void Timer0_ISR() interrupt 1
+
+{
+
+output= !output;
+
+if(output)
+
+{
+
+TH0 = (ON_Period >> 8);
+
+TL0 = ON_Period;
+
+}
+
+else
+
+{
+
+TH0 = (OFF_Period >> 8);
+
+TL0 = OFF_Period;
+
+}
+
+}
+
+void Set_DutyCycle_To(float duty_cycle)
+
+{
+
+float period = 65535 - PWM_Period;
+
+ON_Period = ((period/100.0) * duty_cycle);
+
+OFF_Period = (period - ON_Period);
+
+ON_Period = 65535 - ON_Period;
+
+OFF_Period = 65535 - OFF_Period;
+
+}
+
+void Delay_us()
+
+{
+
+TL0=0xF5;
+
+TH0=0xFF;
+
+TR0=1;
+
+while (TF0==0);
+
+TR0=0;
+
+TF0=0;
+
+}
+
+void init_timer(){
+
+TMOD=0x01;
+
+TF0=0;
+
+TR0 = 0;
+
+}
+
+void send_trigger_pulse(){
+
+Trigger_pin= 1;
+
+Delay_us();
+
+Trigger_pin = 0;
+
+}
+
+void ultraSonic_init()
+
+{
+
+float distance_measurement, value;
+
+unsigned char distance_in_cm[10];
+init_timer();
+
+send_trigger_pulse(); /* send trigger pulse of 10us */
+
+while(!Echo_pin); /* Waiting for Echo */
+
+TR0 = 1; /* Timer Starts */
+
+while(Echo_pin && !TF0); /* Waiting for Echo goes LOW */
+
+TR0 = 0; /* Stop the timer */
+
+/* calculate distance using timer */
+
+value = Clock_period * sound_velocity;
+
+distance_measurement = (TL0|(TH0<<8)); /* read timer register for time count */
+
+distance_measurement = (distance_measurement*value)/2.0; /* find distance(in cm) */
+
+sprintf(distance_in_cm, "%.2f", distance_measurement);
+
+delay(100);}
+
+void servoMotor_init()
+
+{
+
+output=0;
+
+EA = 1; /* Enable global interrupt */
+
+ET0 = 1; /* Enable timer0 interrupt */
+
+Timer_init();
+
+Set_DutyCycle_To(7);/* 1.4ms(7%) of 20ms(100%) period */
+
+delayreal(1000);
+
+Set_DutyCycle_To(7);/* 0.54ms(2.7%) of 20ms(100%) period */
+
+delayreal(1000);
+
+Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+
+delayreal(1000);
+
+Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+
+delayreal(1000);
+
+}
